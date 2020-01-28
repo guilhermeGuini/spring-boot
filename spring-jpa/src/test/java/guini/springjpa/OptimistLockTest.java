@@ -30,38 +30,52 @@ public class OptimistLockTest {
         assertThat(newBalance.getVersion()).isEqualTo(2);
     }
 
+    /**
+     *
+     * Cenário:
+     *
+     * 1- Thread 1 e Thread 2 obtém o mesmo registro (garantimos isso com o sleep).
+     *
+     * 2- Thread 1 atualiza o saldo da conta para 3000.
+     *
+     * 3- Thread 2 que ainda está com o registro antigo, tenta atualizar o saldo para 0,
+     *    porém sem sucesso pois o registro está desatualizado.
+     *
+     * @throws InterruptedException
+     */
     @Test()
     public void shouldThrowExceptionWhenHasConcurrency() throws InterruptedException {
 
         final Account account = createAccount();
 
-        // create thread for simulate concurrency
+        // criando thread para simular processo concorrente
         Thread thread = new Thread(() -> {
             LOGGER.info("Running thread");
 
             /**
-             * 1- First will selected account
-             * 2- Sleep 3 seconds
-             * 3- Update
+             * Dentro do método updateBalance será realizado os três passos
+             * 1- Busca conta usando optimistic lock
+             * 2- Dorme 3 segundos
+             * 3- Atualiza
              */
             Account newBalance = accountBusiness.updateBalance(account.getId(), BigDecimal.valueOf(3000));
             LOGGER.info("Finish thread");
         });
+        thread.setName("Thread 1");
         thread.start();
 
-        // Sleeping to wait the start thread execution
+        // Sleep adicionado para garantir que a thread acima seja executada até o passo 2
         Thread.sleep(1000L);
+        Thread.currentThread().setName("Thread 2");
 
         try {
 
             /**
-             * 1- First will selected account
-             * 2- Sleep 3 seconds
-             * 3- Update
+             * Dentro do método updateBalance será realizado os três passos
+             * 1- Busca conta usando optimistic lock
+             * 2- Dorme 3 segundos
+             * 3- Atualiza
              */
-            // update balance to zero while thread not finish
-            // when this code to execute, the code above yet not finished
-            // then this code will find old account
             LOGGER.info("Update balance to ZERO");
             accountBusiness.updateBalance(account.getId(), BigDecimal.ZERO);
 
@@ -74,15 +88,17 @@ public class OptimistLockTest {
 
         final Account account = createAccount();
 
-        // create thread for simulate concurrency
         Thread thread = new Thread(() -> {
             LOGGER.info("Running thread");
             Account newBalance = accountBusiness.updateBalance(account.getId(), BigDecimal.valueOf(3000));
             LOGGER.info("Finish thread");
         });
+        thread.setName("Thread 1");
         thread.start();
-        // with join method, the code bellow will execute only when thread execution to finish
+        // com o método join, garantimos que a o código abaixo será executado somente após a execução da thread
         thread.join();
+
+        Thread.currentThread().setName("Thread 2");
 
         Account newAccount = accountBusiness.findById(account.getId()).get();
 

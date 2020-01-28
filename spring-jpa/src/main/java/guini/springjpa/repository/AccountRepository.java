@@ -13,6 +13,11 @@ import java.util.Optional;
 @Repository
 public interface AccountRepository extends JpaRepository<Account, Long> {
 
+    /**
+     * Buscamos a conta usando o Optimisct lock
+     * @param id
+     * @return
+     */
     @Lock(LockModeType.OPTIMISTIC_FORCE_INCREMENT)
     @Query("select acc from Account acc where acc.id = :id")
     Optional<Account> findByIdWithLock(@Param("id") Long id);

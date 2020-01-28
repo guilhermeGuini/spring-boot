@@ -56,6 +56,9 @@ public class AccountBusiness {
         LOGGER.info("Account found: {}", account);
 
         try {
+            /**
+             * Sleep para simular processo concorrente
+             */
             Thread.sleep(3000L);
         } catch (InterruptedException e) {
             e.printStackTrace();
@@ -64,7 +67,7 @@ public class AccountBusiness {
         account.setBalance(newBalance);
 
         try {
-            // save and flush to force save alterations instantly
+            // save and flush para enviar as alterações para o banco instantaneamente
             Account newAccount = accountRepository.saveAndFlush(account);
             LOGGER.info("Account updated: {}", newAccount);
             return newAccount;
